@@ -50,7 +50,7 @@ jobs:
         path: output/
         retention-days: 10
 
-    - name: 发送邮件通知
+      - name: 发送邮件通知
       uses: dawidd6/action-send-mail@v3
       with:
         server_address: smtp.qq.com
@@ -74,8 +74,10 @@ jobs:
           
           ---
           此邮件由 GitHub Actions 自动发送
-        from: ETF 数据机器人 <${{ secrets.SMTP_USER }}>
         to: ${{ secrets.RECIPIENTS }}
+        from: 数据采集机器人 <${{ secrets.SMTP_USER }}>
+        content_type: text/plain
+        convert_markdown: false
         ignore_cert: true
         priority: high
         attachments: ./output/etf_uptrend_*.csv
