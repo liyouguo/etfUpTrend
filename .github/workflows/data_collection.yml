@@ -51,16 +51,15 @@ jobs:
         retention-days: 10
 
     - name: 发送邮件通知
-      if: ${{ secrets.SMTP_USER != '' && secrets.RECIPIENTS != '' }}
       uses: dawidd6/action-send-mail@v3
       with:
         server_address: smtp.qq.com
         server_port: 465
         username: ${{ secrets.SMTP_USER }}
         password: ${{ secrets.SMTP_PASSWORD }}
-        subject: ETF 数据采集完成 - ${{ github.run_id }}
+        subject: 数据采集完成通知 - ${{ github.job }} (${{ github.run_id }})
         body: |
-          ETF 上升趋势数据采集任务已完成！
+          数据采集任务已完成！
           
           任务详情：
           - 仓库：${{ github.repository }}
@@ -70,11 +69,8 @@ jobs:
           - 触发方式：${{ github.event_name }}
           - 完成时间：${{ github.event.repository.updated_at }}
           
-          数据文件已生成到 output/ 目录：
-          - etf_uptrend_YYYYMMDD.json (详细数据)
-          - etf_uptrend_YYYYMMDD.csv (表格数据)
-          
-          附件包含 CSV 文件供查阅。
+          采集摘要：
+          ${{ steps.summary.outputs.data }}
           
           ---
           此邮件由 GitHub Actions 自动发送

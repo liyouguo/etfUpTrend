@@ -105,7 +105,7 @@ def fetch_detail(code_list, batch_size=200):
         print(f"  [详情] 批次{i // batch_size + 1}: {len(batch_data)}条")
 
     print(f"[详情] 总计: {len(all_results)}条")
-    print(all_results[0])
+    # print(all_results[0])
     return all_results
 
 
@@ -115,7 +115,7 @@ def parse_detail(raw_list):
     for item in raw_list:
         market, code = item['code'].split(':')
         vals = {v['idx']: v['value'] for v in item['values']}
-        print(vals)
+        # print(vals)
 
         parsed.append({
             "code": code,
