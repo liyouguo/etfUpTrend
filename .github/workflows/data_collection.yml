@@ -50,12 +50,6 @@ jobs:
         path: output/
         retention-days: 10
 
-    - name: 读取 JSON 数据
-      id: json-data
-      uses: andstor/file-reader-action@v1
-      with:
-        path: "output/etf_uptrend_*.json"
-
     - name: 发送邮件通知
       uses: dawidd6/action-send-mail@v3
       with:
