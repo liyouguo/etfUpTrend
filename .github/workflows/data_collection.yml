@@ -79,7 +79,7 @@ jobs:
             
             ---
             此邮件由 GitHub Actions 自动发送
-          from: ${{ secrets.SMTP_USER }}
+          from: 数据采集机器人 <${{ secrets.SMTP_USER }}>
           to: ${{ secrets.RECIPIENTS }}
           ignore_cert: true
           priority: high
