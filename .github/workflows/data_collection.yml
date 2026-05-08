@@ -69,8 +69,6 @@ jobs:
           - 触发方式：${{ github.event_name }}
           - 完成时间：${{ github.event.repository.updated_at }}
           
-          采集摘要：
-          ${{ steps.summary.outputs.data }}
           
           ---
           此邮件由 GitHub Actions 自动发送
