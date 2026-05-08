@@ -51,6 +51,7 @@ jobs:
         retention-days: 10
 
     - name: 发送邮件通知
+      if: ${{ secrets.SMTP_USER != '' && secrets.RECIPIENTS != '' }}
       uses: dawidd6/action-send-mail@v3
       with:
         server_address: smtp.qq.com
@@ -77,10 +78,8 @@ jobs:
           
           ---
           此邮件由 GitHub Actions 自动发送
-        to: ${{ secrets.RECIPIENTS }}
         from: ETF 数据机器人 <${{ secrets.SMTP_USER }}>
-        content_type: text/plain
-        convert_markdown: false
+        to: ${{ secrets.RECIPIENTS }}
         ignore_cert: true
         priority: high
         attachments: ./output/etf_uptrend_*.csv
