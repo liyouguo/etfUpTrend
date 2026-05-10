@@ -1,10 +1,11 @@
 """
-同花顺ETF上升趋势池数据抓取工具
-- 接口1: 获取上升趋势ETF列表（代码+名称+市场）
-- 接口2: 获取上升趋势详细指标（总涨幅、持续天数、连涨天数、涨停占比）
-- 输出: JSON数据 + 控制台TOP排名
+同花顺 ETF 上升趋势池数据抓取工具
+- 接口 1: 获取上升趋势 ETF 列表（代码 + 名称 + 市场）
+- 接口 2: 获取上升趋势详细指标（总涨幅、持续天数、连涨天数、涨停占比）
+- 接口 3: 获取 ETF 上升趋势 AI 洞察标签
+- 输出：JSON 数据（包含 ETF 列表和 AI 洞察） + CSV 表格
 
-Cookie过期后重新从浏览器F12抓包替换即可
+Cookie 过期后重新从浏览器 F12 抓包替换即可
 """
 
 import requests
@@ -23,6 +24,7 @@ OUTPUT_DIR = "./output"
 # ============ 接口地址 ============
 POOL_URL = "https://fund.10jqka.com.cn/quotation/fund_pool/v2/query"
 DETAIL_URL = "https://dataq.10jqka.com.cn/fetch-data-server/fetch/v1/specific_data"
+AI_INSIGHTS_URL = "https://eq.10jqka.com.cn/open/api/etf_rank/etf/uptrend/v1/ai/insights/tags"
 
 
 def _pool_headers():
@@ -53,6 +55,21 @@ def _detail_headers():
     }
 
 
+def _ai_insights_headers():
+    return {
+        'User-Agent': "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 hxFont/normal getHXAPPAdaptOldSetting/0 Language/zh-Hans getHXAPPAccessibilityMode/0 hxnoimage/0 getHXAPPFontSetting/normal VASdkVersion/1.2.2 VoiceAssistantVer/0 hxtheme/0 IHexin/11.97.01 (Royal Flush) userid/438819001 innerversion/I037.08.572 build/11.97.02 surveyVer/0 isVip/0",
+        'Accept': "application/json, text/plain, */*",
+        'Content-Type': "application/json",
+        'Sec-Fetch-Site': "same-site",
+        'sw8': "1-M2VmN2JiZWEtMjBmOC00M2VhLTk4NjktMzE1YjYyYmJkYmEx-ZWMxNmQ2NDQtNGZiZi00MGNhLWIyMjgtNWQ3NmIxYzE1YTI5-0-dGhzamotamotZmVmdW5kLWthbWlzLWh1Yjxicm93c2VyPg==-YmFzaWNfMS4w-Lw==-ZXEuMTBqcWthLmNvbS5jbg==",
+        'Accept-Language': "zh-CN,zh-Hans;q=0.9",
+        'Sec-Fetch-Mode': "cors",
+        'Origin': "https://fund.10jqka.com.cn",
+        'Referer': "https://fund.10jqka.com.cn/",
+        'Sec-Fetch-Dest': "empty",
+    }
+
+
 def fetch_uptrend_pool():
     """接口1: 获取上升趋势ETF列表"""
     payload = {
@@ -69,6 +86,7 @@ def fetch_uptrend_pool():
 
     items = data['data']['itemList']
     print(f"[池子列表] 共{data['data']['total']}只, 返回{len(items)}只")
+    print(items[0])
     return items
 
 
@@ -110,7 +128,7 @@ def fetch_detail(code_list, batch_size=200):
 
 
 def parse_detail(raw_list):
-    """解析详情数据（idx按indexes顺序：0=name,1=total_ratio,2=duration,3=consecutive_days,4=limit_up_cnt,5=limit_up_pct）"""
+    """解析详情数据（idx 按 indexes 顺序：0=name,1=total_ratio,2=duration,3=consecutive_days,4=limit_up_cnt,5=limit_up_pct）"""
     parsed = []
     for item in raw_list:
         market, code = item['code'].split(':')
@@ -130,6 +148,20 @@ def parse_detail(raw_list):
           
         })
     return parsed
+
+
+def fetch_ai_insights(code_list):
+    """接口 3: 获取 ETF 上升趋势 AI 洞察标签"""
+    payload = {
+        "unique_keys": code_list
+    }
+    
+    resp = requests.post(AI_INSIGHTS_URL, json=payload, headers=_ai_insights_headers())
+    resp.raise_for_status()
+    data = resp.json()
+    
+    print(f"[AI 洞察] 返回{len(data.get('data', []))}条数据")
+    return data
 
 
 def print_top(parsed, n=30):
@@ -196,9 +228,15 @@ def main():
     # Step3: 解析保存
     parsed = parse_detail(raw)
 
+    # Step4: 获取 AI 洞察标签
+    ai_data = fetch_ai_insights(code_list)
+    
     out_file = os.path.join(OUTPUT_DIR, f"etf_uptrend_{today}.json")
     with open(out_file, "w", encoding="utf-8") as f:
-        json.dump(parsed, f, ensure_ascii=False, indent=2)
+        json.dump({
+            "etf_list": parsed,
+            "ai_insights": ai_data
+        }, f, ensure_ascii=False, indent=2)
     print(f"已保存：{out_file}")
     
     # 保存为 CSV 格式
@@ -232,7 +270,7 @@ def main():
 
 
     # Step4: 排名和分布
-    print_top(parsed)
+    # print_top(parsed)
     # print_themes(parsed)
 
 
