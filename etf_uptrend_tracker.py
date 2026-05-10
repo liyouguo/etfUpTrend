@@ -145,7 +145,7 @@ def parse_detail(raw_list):
             "etf_up_trend_consecutive_up_days": vals.get(4,''),   # 连涨天数
             "etf_limit_up_stock_cnt": vals.get(5,''),       # 涨停股数
             "etf_limit_up_stock_pct": vals.get(6,''),       # 涨停股占比%
-          
+            "full_code": item['code'],  # 保留完整代码格式用于匹配 AI 洞察
         })
     return parsed
 
@@ -160,11 +160,18 @@ def fetch_ai_insights(code_list):
     resp.raise_for_status()
     data = resp.json()
     
+    print(f"[AI 洞察] API 返回原始数据：{data}")
+    
     tags_dict = {}
     for item in data.get('data', []):
-        code = item.get('unique_key', '')
-        tags = item.get('tags', '')
-        tags_dict[code] = tags
+        code = item.get('code', '') or item.get('unique_key', '')
+        tags_list = item.get('tags', [])
+        if isinstance(tags_list, list):
+            tags = ', '.join(tags_list) if tags_list else ''
+        else:
+            tags = tags_list if tags_list else ''
+        if code:
+            tags_dict[code] = tags
     
     print(f"[AI 洞察] 返回{len(tags_dict)}条数据")
     return tags_dict
@@ -173,8 +180,8 @@ def fetch_ai_insights(code_list):
 def merge_tags_to_parsed(parsed, tags_dict):
     """将 AI 洞察 tags 合并到 ETF 数据中"""
     for item in parsed:
-        code = item['code']
-        item['tags'] = tags_dict.get(code, '')
+        full_code = item.get('full_code', f"{item['market'] == '沪市' and '20' or '36'}:{item['code']}")
+        item['tags'] = tags_dict.get(full_code, '')
     return parsed
 
 
@@ -246,6 +253,10 @@ def main():
     tags_dict = fetch_ai_insights(code_list)
     parsed = merge_tags_to_parsed(parsed, tags_dict)
     
+    # 移除临时字段 full_code
+    for item in parsed:
+        item.pop('full_code', None)
+    
     out_file = os.path.join(OUTPUT_DIR, f"etf_uptrend_{today}.json")
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(parsed, f, ensure_ascii=False, indent=2)
@@ -284,7 +295,7 @@ def main():
 
 
     # Step4: 排名和分布
-    print_top(parsed)
+    # print_top(parsed)
     # print_themes(parsed)
 
 
