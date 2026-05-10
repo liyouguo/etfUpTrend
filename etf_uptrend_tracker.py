@@ -152,6 +152,7 @@ def parse_detail(raw_list):
 
 def fetch_ai_insights(code_list):
     """接口 3: 获取 ETF 上升趋势 AI 洞察标签"""
+    
     payload = {
         "unique_keys": code_list
     }
@@ -160,7 +161,7 @@ def fetch_ai_insights(code_list):
     resp.raise_for_status()
     data = resp.json()
     
-    print(f"[AI 洞察] API 返回原始数据：{data}")
+    # print(f"[AI 洞察] API 返回原始数据：{data}")
     
     tags_dict = {}
     for item in data.get('data', []):
@@ -186,13 +187,14 @@ def merge_tags_to_parsed(parsed, tags_dict):
 
 
 def print_top(parsed, n=30):
-    """打印TOP排名"""
+    """打印 TOP 排名"""
     by_ratio = sorted(parsed, key=lambda x: float(x['etf_limit_up_stock_pct'] or 0), reverse=True)
     print(f"\nTOP{n} 上升趋势涨停股占比最高")
-    print(f"{'排名':<4} {'代码':<8} {'市场':<4} {'名称':<22} {'当日涨幅%':>8} {'总涨幅%':>8} {'持续天数':>8} {'连涨':>4} {'涨停股数':>4} {'涨停占比%':>8}")
-    print("-" * 70)
+    print(f"{'排名':<4} {'代码':<8} {'市场':<4} {'名称':<22} {'当日涨幅%':>8} {'总涨幅%':>8} {'持续天数':>8} {'连涨':>4} {'涨停股数':>4} {'涨停占比%':>8} {'AI 洞察标签':>30}")
+    print("-" * 120)
     for i, p in enumerate(by_ratio[:n]):
-        print(f"{i+1:<4} {p['code']:<8} {p['market']:<4} {p['name'][:20]:<22} {str(p['price_change_ratio_pct']):>8} {str(p['etf_up_trend_total_ratio']):>8} {str(p['etf_up_trend_duration']):>8} {str(p['etf_up_trend_consecutive_up_days']):>8} {str(p['etf_limit_up_stock_cnt']):>4} {str(p['etf_limit_up_stock_pct']):>8}")
+        tags = p.get('tags', '')[:28] + '...' if len(p.get('tags', '')) > 30 else p.get('tags', '')
+        print(f"{i+1:<4} {p['code']:<8} {p['market']:<4} {p['name'][:20]:<22} {str(p['price_change_ratio_pct']):>8} {str(p['etf_up_trend_total_ratio']):>8} {str(p['etf_up_trend_duration']):>8} {str(p['etf_up_trend_consecutive_up_days']):>8} {str(p['etf_limit_up_stock_cnt']):>4} {str(p['etf_limit_up_stock_pct']):>8} {tags:<30}")
 
 
 
@@ -295,7 +297,7 @@ def main():
 
 
     # Step4: 排名和分布
-    # print_top(parsed)
+    print_top(parsed)
     # print_themes(parsed)
 
 
