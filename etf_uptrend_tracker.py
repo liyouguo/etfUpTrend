@@ -120,7 +120,7 @@ def fetch_detail(code_list, batch_size=200):
 
         batch_data = data.get('data', {}).get('data', [])
         all_results.extend(batch_data)
-        print(f"  [详情] 批次{i // batch_size + 1}: {len(batch_data)}条")
+        # print(f"  [详情] 批次{i // batch_size + 1}: {len(batch_data)}条")
 
     print(f"[详情] 总计: {len(all_results)}条")
     # print(all_results[0])
@@ -174,7 +174,7 @@ def fetch_ai_insights(code_list):
         if code:
             tags_dict[code] = tags
     
-    print(f"[AI 洞察] 返回{len(tags_dict)}条数据")
+    # print(f"[AI 洞察] 返回{len(tags_dict)}条数据")
     return tags_dict
 
 
@@ -258,6 +258,9 @@ def main():
     # 移除临时字段 full_code
     for item in parsed:
         item.pop('full_code', None)
+    
+    # 按涨停股占比降序排序
+    parsed = sorted(parsed, key=lambda x: float(x['etf_limit_up_stock_pct'] or 0), reverse=True)
     
     out_file = os.path.join(OUTPUT_DIR, f"etf_uptrend_{today}.json")
     with open(out_file, "w", encoding="utf-8") as f:
