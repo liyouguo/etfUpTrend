@@ -160,8 +160,22 @@ def fetch_ai_insights(code_list):
     resp.raise_for_status()
     data = resp.json()
     
-    print(f"[AI 洞察] 返回{len(data.get('data', []))}条数据")
-    return data
+    tags_dict = {}
+    for item in data.get('data', []):
+        code = item.get('unique_key', '')
+        tags = item.get('tags', '')
+        tags_dict[code] = tags
+    
+    print(f"[AI 洞察] 返回{len(tags_dict)}条数据")
+    return tags_dict
+
+
+def merge_tags_to_parsed(parsed, tags_dict):
+    """将 AI 洞察 tags 合并到 ETF 数据中"""
+    for item in parsed:
+        code = item['code']
+        item['tags'] = tags_dict.get(code, '')
+    return parsed
 
 
 def print_top(parsed, n=30):
@@ -228,15 +242,13 @@ def main():
     # Step3: 解析保存
     parsed = parse_detail(raw)
 
-    # Step4: 获取 AI 洞察标签
-    ai_data = fetch_ai_insights(code_list)
+    # Step4: 获取 AI 洞察标签并合并
+    tags_dict = fetch_ai_insights(code_list)
+    parsed = merge_tags_to_parsed(parsed, tags_dict)
     
     out_file = os.path.join(OUTPUT_DIR, f"etf_uptrend_{today}.json")
     with open(out_file, "w", encoding="utf-8") as f:
-        json.dump({
-            "etf_list": parsed,
-            "ai_insights": ai_data
-        }, f, ensure_ascii=False, indent=2)
+        json.dump(parsed, f, ensure_ascii=False, indent=2)
     print(f"已保存：{out_file}")
     
     # 保存为 CSV 格式
@@ -249,7 +261,8 @@ def main():
     "etf_up_trend_duration",
     "etf_up_trend_consecutive_up_days",
     "etf_limit_up_stock_cnt",
-    "etf_limit_up_stock_pct"]
+    "etf_limit_up_stock_pct",
+    "tags"]
     
     chinese_headers = ["代码",
     "市场",
@@ -259,7 +272,8 @@ def main():
     "上升趋势持续天数",
     "连涨天数",
     "涨停股数",
-    "涨停股占比%"]
+    "涨停股占比%",
+    "AI 洞察标签"]
     
     with open(csv_file, "w", encoding="utf-8", newline="") as f:
         f.write(",".join(chinese_headers) + "\n")
@@ -270,7 +284,7 @@ def main():
 
 
     # Step4: 排名和分布
-    # print_top(parsed)
+    print_top(parsed)
     # print_themes(parsed)
 
 
