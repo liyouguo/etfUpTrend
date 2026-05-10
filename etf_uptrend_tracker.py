@@ -86,7 +86,7 @@ def fetch_uptrend_pool():
 
     items = data['data']['itemList']
     print(f"[池子列表] 共{data['data']['total']}只, 返回{len(items)}只")
-    print(items[0])
+
     return items
 
 
@@ -266,7 +266,8 @@ def main():
     
     # 保存为 CSV 格式
     csv_file = os.path.join(OUTPUT_DIR, f"etf_uptrend_{today}.csv")
-    fieldnames = ["code",
+    fieldnames = ["rank",
+    "code",
     "market",
     "name",
     "price_change_ratio_pct",
@@ -277,7 +278,8 @@ def main():
     "etf_limit_up_stock_pct",
     "tags"]
     
-    chinese_headers = ["代码",
+    chinese_headers = ["序号",
+    "代码",
     "市场",
     "名称",
     "当日涨幅%",
@@ -287,6 +289,10 @@ def main():
     "涨停股数",
     "涨停股占比%",
     "AI 洞察标签"]
+    
+    # 添加序号到数据中
+    for idx, item in enumerate(parsed, 1):
+        item['rank'] = idx
     
     with open(csv_file, "w", encoding="utf-8", newline="") as f:
         f.write(",".join(chinese_headers) + "\n")
@@ -298,7 +304,7 @@ def main():
 
     # Step4: 排名和分布
     print_top(parsed)
-    # print_themes(parsed)
+    print_themes(parsed)
 
 
 if __name__ == "__main__":
