@@ -3,7 +3,7 @@ name: ETF 上升趋势数据采集
 on:
   schedule:
     # 每天 UTC 时间 1:40 运行 (北京时间 9:40)
-    - cron: '40 1 * * *'
+    - cron: '0 8 * * *'
   workflow_dispatch:
     # 允许手动触发
     inputs:
